@@ -1,0 +1,48 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: Daily Uplift SMS - Serverless application to send daily motivational messages via SMS
+
+Parameters:
+  ScheduleExpression:
+    Type: String
+    Default: 'cron(0 8 * * ? *)'
+    Description: Schedule expression for when to send messages (default is 8:00 AM UTC daily)
+
+Resources:
+  # SNS Topic for sending SMS messages
+  UpliftSMSTopic:
+    Type: AWS::SNS::Topic
+    Properties:
+      DisplayName: DailyUplift
+      TopicName: daily-uplift-sms-topic
+
+  # Lambda function to select and send messages
+  UpliftLambdaFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: ../src/
+      Handler: lambda_function.lambda_handler
+      Runtime: python3.9
+      Timeout: 10
+      MemorySize: 128
+      Environment:
+        Variables:
+          SNS_TOPIC_ARN: !Ref UpliftSMSTopic
+      Policies:
+        - SNSPublishMessagePolicy:
+            TopicName: !GetAtt UpliftSMSTopic.TopicName
+      Events:
+        DailySchedule:
+          Type: Schedule
+          Properties:
+            Schedule: !Ref ScheduleExpression
+            Name: DailyUpliftSchedule
+            Description: Triggers the Lambda function to send daily uplift messages
+
+Outputs:
+  UpliftSMSTopicARN:
+    Description: ARN of the SNS topic for SMS messages
+    Value: !Ref UpliftSMSTopic
+  UpliftLambdaFunctionARN:
+    Description: ARN of the Lambda function
+    Value: !GetAtt UpliftLambdaFunction.Arn
