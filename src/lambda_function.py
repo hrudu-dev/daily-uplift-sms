@@ -4,6 +4,7 @@ import boto3
 import os
 import logging
 from datetime import datetime
+import pytz
 import boto3.dynamodb.conditions as conditions
 
 # Configure logging
@@ -19,6 +20,11 @@ SNS_TOPIC_ARN = os.environ.get('SNS_TOPIC_ARN')
 SUBSCRIBERS_TABLE = os.environ.get('SUBSCRIBERS_TABLE')
 ANALYTICS_TABLE = os.environ.get('ANALYTICS_TABLE')
 
+def get_ist_time():
+    """Get current time in IST"""
+    ist = pytz.timezone('Asia/Kolkata')
+    return datetime.now(ist)
+
 # Message categories with their respective messages
 MESSAGES = {
     "motivation": [
@@ -28,7 +34,10 @@ MESSAGES = {
         "You've overcome difficult things before, and you can do it again.",
         "You are stronger than you think and braver than you believe.",
         "Don't forget to celebrate your small victories today.",
-        "Your best is enough, and it will always be enough."
+        "Your best is enough, and it will always be enough.",
+        "Every challenge is an opportunity to grow stronger.",
+        "Believe in yourself - you have everything you need to succeed.",
+        "Your dreams are valid and worth pursuing."
     ],
     "mental_health": [
         "Your mental health matters. Be kind to yourself today.",
@@ -37,7 +46,10 @@ MESSAGES = {
         "Self-care isn't selfish, it's necessary.",
         "Your worth isn't measured by your productivity.",
         "Healing isn't linear, and that's perfectly normal.",
-        "You matter, even on the days when you don't feel like you do."
+        "You matter, even on the days when you don't feel like you do.",
+        "Taking breaks is part of taking care of yourself.",
+        "You're doing better than you think you are.",
+        "It's okay to not be okay sometimes."
     ],
     "mindfulness": [
         "Take a moment to breathe deeply and appreciate this moment.",
@@ -45,7 +57,17 @@ MESSAGES = {
         "Remember to drink water and take short breaks throughout your day.",
         "Progress isn't always visible, but that doesn't mean it's not happening.",
         "Be proud of yourself for making it this far.",
-        "It's okay to set boundaries that protect your peace."
+        "It's okay to set boundaries that protect your peace.",
+        "Focus on what you can control and let go of what you can't.",
+        "Every breath is a new beginning.",
+        "You are exactly where you need to be right now."
+    ],
+    "encouragement": [
+        "You're making a difference, even when you can't see it.",
+        "Your kindness creates ripples of positivity.",
+        "Someone believes in you today.",
+        "You have survived 100% of your difficult days so far.",
+        "Your story isn't over yet - keep writing."
     ]
 }
 
@@ -70,7 +92,7 @@ def record_analytics(message_id, category, subscriber_count):
             table = dynamodb.Table(ANALYTICS_TABLE)
             table.put_item(Item={
                 'message_id': message_id,
-                'timestamp': datetime.utcnow().isoformat(),
+                'timestamp': get_ist_time().isoformat(),
                 'category': category,
                 'subscriber_count': subscriber_count
             })
